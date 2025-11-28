@@ -2,3 +2,5 @@
 results/
 server/uvicorn.out
 server/uvicorn.err
+__pycache__/
+*.pyc
