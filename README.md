@@ -123,6 +123,13 @@ output_path = 'your/output/dir'
 
 res = model.infer(tokenizer, prompt=prompt, image_file=image_file, output_path = output_path, base_size = 1024, image_size = 640, crop_mode=True, save_results = True, test_compress = True)
 ```
+
+## Web Server + UI (port 10103)
+- Install the extra server deps: `pip install -r requirements.txt` (adds FastAPI/uvicorn/python-multipart/aiofiles).
+- Start the service: `uvicorn server.main:app --host 0.0.0.0 --port 10103`.
+- Visit `http://<host>:10103/` for a minimal UI to upload files or folders (images/PDFs). The server loads the tested RTX3090 pipeline on first use and returns combined `combined.md`/`combined.txt` under `results/<session_id>/`.
+- API example: `curl -F "files=@sample.pdf" -F "prompt=markdown" http://<host>:10103/api/ocr`.
+- Health check: `curl http://<host>:10103/api/health`.
 or you can
 ```Shell
 cd DeepSeek-OCR-master/DeepSeek-OCR-hf

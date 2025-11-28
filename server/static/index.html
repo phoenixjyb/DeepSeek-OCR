@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DeepSeek OCR</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: radial-gradient(circle at 20% 20%, #111827 0, #0b1220 25%, #0a0f1c 100%);
+      --card: rgba(255, 255, 255, 0.04);
+      --muted: #9fb0cc;
+      --accent: #7bdcb5;
+      --accent-strong: #42c29c;
+      --border: rgba(255, 255, 255, 0.08);
+      --text: #e8edf7;
+      --shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Space Grotesk", "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 28px 18px 48px;
+    }
+
+    .shell {
+      width: min(1100px, 100%);
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .title {
+      font-size: clamp(24px, 3vw, 30px);
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .badge {
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      font-size: 12px;
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .lead {
+      color: var(--muted);
+      margin: 0 0 18px 0;
+      max-width: 840px;
+      line-height: 1.5;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .panel {
+      border: 1px solid var(--border);
+      background: var(--card);
+      border-radius: 14px;
+      padding: 14px;
+      min-height: 90px;
+    }
+
+    .panel h4 {
+      margin: 0 0 6px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #d6deee;
+      letter-spacing: 0.01em;
+    }
+
+    .muted {
+      color: var(--muted);
+      margin: 0;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .inputs {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-top: 8px;
+    }
+
+    input[type="file"] { display: none; }
+
+    .btn {
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      transition: all 0.18s ease;
+    }
+
+    .btn:hover {
+      border-color: rgba(255, 255, 255, 0.18);
+      transform: translateY(-1px);
+    }
+
+    .btn.primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+      color: #05121e;
+      border: none;
+      box-shadow: 0 10px 30px rgba(66, 194, 156, 0.35);
+    }
+
+    select, .chip {
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 9px 10px;
+      font-weight: 600;
+      min-width: 160px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 12px;
+    }
+
+    .status {
+      margin: 14px 0 0;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.02);
+      display: none;
+    }
+
+    .status.active { display: block; }
+    .status.error { border-color: #fda4af; color: #fca5a5; }
+
+    .results {
+      margin-top: 16px;
+      display: none;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .results.active { display: flex; }
+
+    .link-card {
+      border: 1px solid var(--border);
+      background: var(--card);
+      padding: 12px 14px;
+      border-radius: 12px;
+      min-width: 180px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .link-card a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    .link-card small {
+      color: var(--muted);
+    }
+
+    .list {
+      margin-top: 12px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px dashed var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      color: var(--muted);
+      font-size: 13px;
+      max-height: 150px;
+      overflow-y: auto;
+      display: none;
+    }
+
+    .list.active { display: block; }
+
+    .loader {
+      width: 18px;
+      height: 18px;
+      border: 3px solid rgba(255, 255, 255, 0.15);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-right: 8px;
+      display: inline-block;
+      vertical-align: middle;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .user-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .user-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--text);
+      font-weight: 600;
+      box-shadow: var(--shadow);
+    }
+
+    .mono { font-family: "SFMono-Regular","JetBrains Mono","Consolas",monospace; font-size: 13px; }
+
+    .small-btn {
+      padding: 6px 10px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border);
+      color: var(--text);
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .small-btn:hover { border-color: rgba(255, 255, 255, 0.25); }
+
+    .progress {
+      margin-top: 10px;
+      display: none;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .progress-bar-wrap {
+      flex: 1;
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent), var(--accent-strong));
+      transition: width 0.4s ease;
+    }
+
+    .progress-text {
+      color: var(--muted);
+      font-size: 13px;
+      min-width: 120px;
+      text-align: right;
+    }
+
+    @media (max-width: 720px) {
+      .shell { padding: 22px; }
+      header { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <div class="title">
+        DeepSeek OCR
+        <span class="badge">Runs on your RTX 3090 server</span>
+      </div>
+    </header>
+    <div class="user-row">
+      <div class="user-chip">
+        <span>User</span>
+        <span id="user-id" class="mono">—</span>
+        <button id="copy-token" class="small-btn">Copy token</button>
+      </div>
+      <div class="user-chip">
+        <span>Status:</span>
+        <span id="user-status" class="mono">Connecting…</span>
+      </div>
+    </div>
+    <p class="lead">
+      Upload images or an entire folder. The server will run the tested DeepSeek-OCR pipeline and return a combined markdown or text file you can download instantly.
+    </p>
+
+    <div class="controls">
+      <div class="panel">
+        <h4>1. Choose files or a folder</h4>
+        <p class="muted">Images (png, jpg, webp, bmp, tiff) and PDFs are supported. Folder upload keeps sub-paths.</p>
+        <div class="inputs">
+          <label class="btn" for="file-input">Select files</label>
+          <input id="file-input" type="file" multiple accept=".png,.jpg,.jpeg,.bmp,.webp,.tif,.tiff,.pdf,image/*">
+
+          <label class="btn" for="folder-input">Upload folder</label>
+          <input id="folder-input" type="file" webkitdirectory directory multiple>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h4>2. Prompt style</h4>
+        <p class="muted">Pick the prompt to feed the model.</p>
+        <div class="inputs">
+          <select id="prompt">
+            <option value="markdown" selected>Markdown layout</option>
+            <option value="free">Free OCR</option>
+          </select>
+          <button id="submit" class="btn primary">Run OCR</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="status" class="status"></div>
+    <div id="progress" class="progress">
+      <div class="progress-bar-wrap">
+        <div id="progress-bar" class="progress-bar"></div>
+      </div>
+      <div id="progress-text" class="progress-text">0%</div>
+    </div>
+    <div id="file-list" class="list"></div>
+
+    <div id="results" class="results">
+      <div class="link-card">
+        <div>
+          <a id="md-link" href="#" download>Download markdown</a>
+          <small>Combined .md</small>
+        </div>
+      </div>
+      <div class="link-card">
+        <div>
+          <a id="txt-link" href="#" download>Download text</a>
+          <small>Combined .txt</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById("file-input");
+    const folderInput = document.getElementById("folder-input");
+    const promptSelect = document.getElementById("prompt");
+    const statusBox = document.getElementById("status");
+    const submitBtn = document.getElementById("submit");
+    const resultsBox = document.getElementById("results");
+    const mdLink = document.getElementById("md-link");
+    const txtLink = document.getElementById("txt-link");
+    const fileList = document.getElementById("file-list");
+    const progress = document.getElementById("progress");
+    const progressBar = document.getElementById("progress-bar");
+    const progressText = document.getElementById("progress-text");
+    const userIdEl = document.getElementById("user-id");
+    const userStatusEl = document.getElementById("user-status");
+    const copyTokenBtn = document.getElementById("copy-token");
+
+    let progressTimer = null;
+    let currentUser = null;
+    const USER_KEY = "deepseek_ocr_user";
+
+    function showStatus(message, isError = false, isWorking = false) {
+      statusBox.textContent = "";
+      statusBox.className = "status active";
+      if (isError) statusBox.classList.add("error");
+      if (isWorking) {
+        const loader = document.createElement("span");
+        loader.className = "loader";
+        statusBox.appendChild(loader);
+      }
+      const text = document.createElement("span");
+      text.textContent = message;
+      statusBox.appendChild(text);
+    }
+
+    function persistUser(user) {
+      currentUser = user;
+      localStorage.setItem(USER_KEY, JSON.stringify(user));
+      userIdEl.textContent = user.user_id;
+      userStatusEl.textContent = "Ready";
+    }
+
+    function loadUserFromStorage() {
+      const raw = localStorage.getItem(USER_KEY);
+      if (!raw) return null;
+      try {
+        return JSON.parse(raw);
+      } catch (e) {
+        return null;
+      }
+    }
+
+    async function ensureUser() {
+      const cached = loadUserFromStorage();
+      if (cached && cached.token) {
+        persistUser(cached);
+        return cached;
+      }
+      userStatusEl.textContent = "Requesting token…";
+      const res = await fetch("/api/users/new", { method: "POST" });
+      if (!res.ok) throw new Error("Failed to obtain user token");
+      const data = await res.json();
+      persistUser(data);
+      return data;
+    }
+
+    function getAuthHeaders() {
+      if (!currentUser || !currentUser.token) return {};
+      return { Authorization: `Bearer ${currentUser.token}` };
+    }
+
+    function resetProgress() {
+      if (progressTimer) {
+        clearInterval(progressTimer);
+        progressTimer = null;
+      }
+      progressBar.style.width = "0%";
+      progressText.textContent = "0%";
+      progress.style.display = "none";
+    }
+
+    function startProgress(totalFiles) {
+      resetProgress();
+      progress.style.display = "flex";
+      let current = 8;
+      progressBar.style.width = `${current}%`;
+      progressText.textContent = `Uploading ${totalFiles} file${totalFiles > 1 ? "s" : ""}…`;
+
+      progressTimer = setInterval(() => {
+        current = Math.min(current + Math.random() * 8, 92);
+        progressBar.style.width = `${current.toFixed(1)}%`;
+        progressText.textContent = `Processing… ${Math.round(current)}%`;
+      }, 600);
+    }
+
+    function finishProgress() {
+      if (progressTimer) {
+        clearInterval(progressTimer);
+        progressTimer = null;
+      }
+      progressBar.style.width = "100%";
+      progressText.textContent = "Processing complete";
+      setTimeout(() => {
+        progress.style.display = "none";
+        progressBar.style.width = "0%";
+      }, 1500);
+    }
+
+    function failProgress() {
+      if (progressTimer) {
+        clearInterval(progressTimer);
+        progressTimer = null;
+      }
+      progressBar.style.width = "0%";
+      progressText.textContent = "Failed";
+    }
+
+    function renderFileList(files) {
+      if (!files || files.length === 0) {
+        fileList.classList.remove("active");
+        fileList.textContent = "";
+        return;
+      }
+      const names = Array.from(files).map(f => f.webkitRelativePath || f.name);
+      fileList.classList.add("active");
+      fileList.innerHTML = names.map(n => `• ${n}`).join("<br>");
+    }
+
+    async function runOCR() {
+      const selected = [
+        ...fileInput.files ? Array.from(fileInput.files) : [],
+        ...folderInput.files ? Array.from(folderInput.files) : [],
+      ];
+
+      renderFileList(selected);
+
+      if (selected.length === 0) {
+        showStatus("Please add at least one file or folder.", true);
+        return;
+      }
+
+      if (!currentUser) {
+        showStatus("Fetching user token…", false, true);
+        try {
+          await ensureUser();
+        } catch (e) {
+          showStatus(e.message || "Unable to get user token.", true);
+          return;
+        }
+      }
+
+      const formData = new FormData();
+      selected.forEach((file, idx) => {
+        const name = file.webkitRelativePath || file.name || `upload_${idx}`;
+        formData.append("files", file, name);
+      });
+      formData.append("prompt", promptSelect.value);
+
+      submitBtn.disabled = true;
+      showStatus("Running OCR on server… this may take a moment.", false, true);
+      startProgress(selected.length);
+      resultsBox.classList.remove("active");
+
+      try {
+        const res = await fetch("/api/ocr", {
+          method: "POST",
+          body: formData,
+          headers: getAuthHeaders(),
+        });
+        if (!res.ok) {
+          const payload = await res.json().catch(() => ({}));
+          const msg = payload.detail || payload.message || `Server error (${res.status})`;
+          throw new Error(msg);
+        }
+        const data = await res.json();
+        mdLink.href = data.combined_markdown;
+        txtLink.href = data.combined_text;
+        resultsBox.classList.add("active");
+        showStatus("Done. Download your results below.");
+        finishProgress();
+      } catch (err) {
+        showStatus(err.message || "Failed to run OCR.", true);
+        failProgress();
+      } finally {
+        submitBtn.disabled = false;
+      }
+    }
+
+    submitBtn.addEventListener("click", runOCR);
+    fileInput.addEventListener("change", () => renderFileList(fileInput.files));
+    folderInput.addEventListener("change", () => renderFileList(folderInput.files));
+
+    copyTokenBtn.addEventListener("click", async () => {
+      if (!currentUser || !currentUser.token) return;
+      try {
+        await navigator.clipboard.writeText(currentUser.token);
+        userStatusEl.textContent = "Token copied";
+        setTimeout(() => (userStatusEl.textContent = "Ready"), 1500);
+      } catch (e) {
+        userStatusEl.textContent = "Copy failed";
+        setTimeout(() => (userStatusEl.textContent = "Ready"), 1500);
+      }
+    });
+
+    (async () => {
+      try {
+        await ensureUser();
+        userStatusEl.textContent = "Ready";
+      } catch (e) {
+        userStatusEl.textContent = "Token error";
+        showStatus(e.message || "Unable to init user.", true);
+      }
+    })();
+  </script>
+</body>
+</html>
